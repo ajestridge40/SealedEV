@@ -107,6 +107,18 @@ model PullTier {
   /// Chase tiers feed the break-even analysis.
   isChase           Boolean     @default(false)
   sortOrder         Int         @default(0)
+  /// TCGplayer sync: when syncRarities or syncNameContains is set, the daily job
+  /// links every card in the set's TCGplayer group that passes these filters
+  /// and sets poolSize to the number of linked cards.
+  syncRarities        String[]  @default([])
+  /// TCGplayer price sub-type to use for synced cards ("Normal", "Holofoil",
+  /// "Reverse Holofoil", "Foil"). Null = best match for the card's finish.
+  syncSubType         String?
+  /// Only cards whose TCGplayer name contains this text (e.g. "Master Ball Pattern").
+  syncNameContains    String?
+  /// Include alt printings whose TCGplayer name has a parenthetical, e.g. "(Borderless)".
+  syncIncludeVariants Boolean   @default(false)
+  lastSyncedAt        DateTime?
   cards             TierCard[]
   updatedAt         DateTime    @updatedAt
 
@@ -129,6 +141,8 @@ model Card {
   priceSource        String?
   priceUpdatedAt     DateTime?
   tcgplayerProductId Int?
+  /// Exact TCGplayer price sub-type to read (null = pick by finish).
+  tcgplayerSubType   String?
   scryfallId         String?
   pokemontcgId       String?
   tiers              TierCard[]

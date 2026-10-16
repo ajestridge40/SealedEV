@@ -13,6 +13,7 @@ function playBoosterBulk(): SeedTier[] {
   return [
     {
       name: "Common",
+      syncRarities: ["Common"],
       rarity: "Common",
       perPack: 6.5,
       oddsSource: "COMMUNITY",
@@ -22,6 +23,7 @@ function playBoosterBulk(): SeedTier[] {
     },
     {
       name: "Uncommon",
+      syncRarities: ["Uncommon"],
       rarity: "Uncommon",
       perPack: 3.5,
       oddsSource: "COMMUNITY",
@@ -46,6 +48,7 @@ export const mtgSets: SeedSet[] = [
           ...playBoosterBulk(),
           {
             name: "Rare (rare + wildcard slots)",
+            syncRarities: ["Rare"],
             rarity: "Rare",
             perPack: 0.93,
             oddsSource: "COMMUNITY",
@@ -62,6 +65,7 @@ export const mtgSets: SeedSet[] = [
           },
           {
             name: "Mythic (rare + wildcard slots)",
+            syncRarities: ["Mythic"],
             rarity: "Mythic",
             perPack: 0.16,
             oddsSource: "COMMUNITY",
@@ -79,6 +83,8 @@ export const mtgSets: SeedSet[] = [
           },
           {
             name: "Traditional foil rare/mythic",
+            syncRarities: ["Rare", "Mythic"],
+            syncSubType: "Foil",
             rarity: "Rare/Mythic (foil)",
             perPack: 0.07,
             oddsSource: "ESTIMATE",
@@ -116,6 +122,8 @@ export const mtgSets: SeedSet[] = [
         tiers: [
           {
             name: "Foil commons/uncommons",
+            syncRarities: ["Common", "Uncommon"],
+            syncSubType: "Foil",
             rarity: "Common/Uncommon (foil)",
             perPack: 7,
             oddsSource: "ESTIMATE",
@@ -132,6 +140,8 @@ export const mtgSets: SeedSet[] = [
           },
           {
             name: "Foil rare/mythic",
+            syncRarities: ["Rare", "Mythic"],
+            syncSubType: "Foil",
             rarity: "Rare/Mythic (foil)",
             perPack: 1,
             oddsSource: "ESTIMATE",
@@ -193,6 +203,7 @@ export const mtgSets: SeedSet[] = [
           ...playBoosterBulk(),
           {
             name: "Rare (rare + wildcard slots)",
+            syncRarities: ["Rare"],
             rarity: "Rare",
             perPack: 0.93,
             oddsSource: "COMMUNITY",
@@ -203,6 +214,7 @@ export const mtgSets: SeedSet[] = [
           },
           {
             name: "Mythic (rare + wildcard slots)",
+            syncRarities: ["Mythic"],
             rarity: "Mythic",
             perPack: 0.16,
             oddsSource: "COMMUNITY",
@@ -218,6 +230,8 @@ export const mtgSets: SeedSet[] = [
           },
           {
             name: "Traditional foil rare/mythic",
+            syncRarities: ["Rare", "Mythic"],
+            syncSubType: "Foil",
             rarity: "Rare/Mythic (foil)",
             perPack: 0.07,
             oddsSource: "ESTIMATE",

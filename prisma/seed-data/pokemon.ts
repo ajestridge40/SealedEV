@@ -12,6 +12,7 @@ function svBulkTiers(o: { common: number; uncommon: number; reverse: number }): 
   return [
     {
       name: "Common",
+      syncRarities: ["Common"],
       rarity: "Common",
       perPack: 4,
       oddsSource: "COMMUNITY",
@@ -21,6 +22,7 @@ function svBulkTiers(o: { common: number; uncommon: number; reverse: number }): 
     },
     {
       name: "Uncommon",
+      syncRarities: ["Uncommon"],
       rarity: "Uncommon",
       perPack: 3,
       oddsSource: "COMMUNITY",
@@ -30,6 +32,8 @@ function svBulkTiers(o: { common: number; uncommon: number; reverse: number }): 
     },
     {
       name: "Reverse Holo (non-hit)",
+      syncRarities: ["Common", "Uncommon", "Rare"],
+      syncSubType: "Reverse Holofoil",
       rarity: "Reverse Holo",
       perPack: 1.75,
       oddsSource: "ESTIMATE",
@@ -54,6 +58,7 @@ export const pokemonSets: SeedSet[] = [
           ...svBulkTiers({ common: 0.03, uncommon: 0.05, reverse: 0.15 }),
           {
             name: "Rare (holo)",
+            syncRarities: ["Rare", "Holo Rare"],
             rarity: "Rare",
             perPack: 0.68,
             oddsSource: "ESTIMATE",
@@ -63,6 +68,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "ACE SPEC Rare",
+            syncRarities: ["ACE SPEC Rare"],
             rarity: "ACE SPEC Rare",
             perPack: 1 / 20,
             oddsSource: "ESTIMATE",
@@ -72,6 +78,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Double Rare (ex)",
+            syncRarities: ["Double Rare"],
             rarity: "Double Rare",
             perPack: 1 / 6,
             oddsSource: "ESTIMATE",
@@ -81,6 +88,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Ultra Rare (full art)",
+            syncRarities: ["Ultra Rare"],
             rarity: "Ultra Rare",
             perPack: 1 / 15,
             oddsSource: "ESTIMATE",
@@ -90,6 +98,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Illustration Rare",
+            syncRarities: ["Illustration Rare"],
             rarity: "Illustration Rare",
             perPack: 1 / 13,
             oddsSource: "COMMUNITY",
@@ -100,6 +109,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Special Illustration Rare",
+            syncRarities: ["Special Illustration Rare"],
             rarity: "Special Illustration Rare",
             perPack: 1 / 87,
             oddsSource: "COMMUNITY",
@@ -116,6 +126,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Hyper Rare (gold)",
+            syncRarities: ["Hyper Rare"],
             rarity: "Hyper Rare",
             perPack: 1 / 189,
             oddsSource: "COMMUNITY",
@@ -168,6 +179,7 @@ export const pokemonSets: SeedSet[] = [
           ...svBulkTiers({ common: 0.05, uncommon: 0.08, reverse: 0.3 }),
           {
             name: "Poké Ball pattern holo",
+            syncNameContains: "Poke Ball Pattern",
             rarity: "Reverse Holo (Poké Ball)",
             perPack: 0.9,
             oddsSource: "ESTIMATE",
@@ -177,6 +189,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Master Ball pattern holo",
+            syncNameContains: "Master Ball Pattern",
             rarity: "Reverse Holo (Master Ball)",
             perPack: 1 / 20,
             oddsSource: "ESTIMATE",
@@ -186,6 +199,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Rare (holo)",
+            syncRarities: ["Rare", "Holo Rare"],
             rarity: "Rare",
             perPack: 0.6,
             oddsSource: "ESTIMATE",
@@ -194,6 +208,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "ACE SPEC Rare",
+            syncRarities: ["ACE SPEC Rare"],
             rarity: "ACE SPEC Rare",
             perPack: 1 / 20,
             oddsSource: "ESTIMATE",
@@ -202,6 +217,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Double Rare (ex)",
+            syncRarities: ["Double Rare"],
             rarity: "Double Rare",
             perPack: 1 / 5,
             oddsSource: "ESTIMATE",
@@ -210,6 +226,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Ultra Rare (full art)",
+            syncRarities: ["Ultra Rare"],
             rarity: "Ultra Rare",
             perPack: 1 / 13,
             oddsSource: "ESTIMATE",
@@ -218,6 +235,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Special Illustration Rare",
+            syncRarities: ["Special Illustration Rare"],
             rarity: "Special Illustration Rare",
             perPack: 1 / 45,
             oddsSource: "ESTIMATE",
@@ -238,6 +256,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Hyper Rare (gold)",
+            syncRarities: ["Hyper Rare"],
             rarity: "Hyper Rare",
             perPack: 1 / 180,
             oddsSource: "ESTIMATE",
@@ -287,6 +306,7 @@ export const pokemonSets: SeedSet[] = [
           ...svBulkTiers({ common: 0.05, uncommon: 0.08, reverse: 0.4 }),
           {
             name: "Rare (holo)",
+            syncRarities: ["Rare", "Holo Rare"],
             rarity: "Rare",
             perPack: 0.65,
             oddsSource: "ESTIMATE",
@@ -295,6 +315,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Double Rare (ex)",
+            syncRarities: ["Double Rare"],
             rarity: "Double Rare",
             perPack: 1 / 8,
             oddsSource: "ESTIMATE",
@@ -303,6 +324,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Ultra Rare (full art)",
+            syncRarities: ["Ultra Rare"],
             rarity: "Ultra Rare",
             perPack: 1 / 16,
             oddsSource: "ESTIMATE",
@@ -311,6 +333,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Illustration Rare",
+            syncRarities: ["Illustration Rare"],
             rarity: "Illustration Rare",
             perPack: 1 / 12,
             oddsSource: "ESTIMATE",
@@ -324,6 +347,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Special Illustration Rare",
+            syncRarities: ["Special Illustration Rare"],
             rarity: "Special Illustration Rare",
             perPack: 1 / 32,
             oddsSource: "ESTIMATE",
@@ -342,6 +366,7 @@ export const pokemonSets: SeedSet[] = [
           },
           {
             name: "Hyper Rare (gold)",
+            syncRarities: ["Hyper Rare"],
             rarity: "Hyper Rare",
             perPack: 1 / 52,
             oddsSource: "ESTIMATE",

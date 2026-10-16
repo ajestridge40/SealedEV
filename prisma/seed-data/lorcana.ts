@@ -18,10 +18,11 @@ export const lorcanaSets: SeedSet[] = [
         name: "Booster Pack",
         cardsPerPack: 12,
         tiers: [
-          { name: "Common", rarity: "Common", perPack: 6, oddsSource: "COMMUNITY", oddsSourceNote: LAYOUT_NOTE, poolSize: 72, unlistedCardValue: 0.03 },
-          { name: "Uncommon", rarity: "Uncommon", perPack: 3, oddsSource: "COMMUNITY", oddsSourceNote: LAYOUT_NOTE, poolSize: 54, unlistedCardValue: 0.06 },
+          { name: "Common", syncRarities: ["Common"], rarity: "Common", perPack: 6, oddsSource: "COMMUNITY", oddsSourceNote: LAYOUT_NOTE, poolSize: 72, unlistedCardValue: 0.03 },
+          { name: "Uncommon", syncRarities: ["Uncommon"], rarity: "Uncommon", perPack: 3, oddsSource: "COMMUNITY", oddsSourceNote: LAYOUT_NOTE, poolSize: 54, unlistedCardValue: 0.06 },
           {
             name: "Rare",
+            syncRarities: ["Rare"],
             rarity: "Rare",
             perPack: 1.4,
             oddsSource: "ESTIMATE",
@@ -31,6 +32,7 @@ export const lorcanaSets: SeedSet[] = [
           },
           {
             name: "Super Rare",
+            syncRarities: ["Super Rare"],
             rarity: "Super Rare",
             perPack: 0.45,
             oddsSource: "ESTIMATE",
@@ -39,6 +41,7 @@ export const lorcanaSets: SeedSet[] = [
           },
           {
             name: "Legendary",
+            syncRarities: ["Legendary"],
             rarity: "Legendary",
             perPack: 0.15,
             oddsSource: "ESTIMATE",
@@ -47,6 +50,8 @@ export const lorcanaSets: SeedSet[] = [
           },
           {
             name: "Foil (non-Enchanted)",
+            syncRarities: ["Common", "Uncommon", "Rare", "Super Rare", "Legendary"],
+            syncSubType: "Cold Foil,Foil",
             rarity: "Foil",
             perPack: 1 - 1 / 96,
             oddsSource: "COMMUNITY",
@@ -56,6 +61,8 @@ export const lorcanaSets: SeedSet[] = [
           },
           {
             name: "Enchanted",
+            syncRarities: ["Enchanted"],
+            syncIncludeVariants: true,
             rarity: "Enchanted",
             perPack: 1 / 96,
             oddsSource: "ESTIMATE",

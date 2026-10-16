@@ -19,7 +19,7 @@ export default async function AdminPage() {
     );
   }
 
-  const [products, noPrice, noTcgId, tiers, cards, cardsNoId, lastEv] = await Promise.all([
+  const [products, noPrice, noTcgId, tiers, cards, cardsNoId, lastEv, setsNoGroup, syncedTiers] = await Promise.all([
     prisma.product.count(),
     prisma.product.count({ where: { marketPrice: null } }),
     prisma.product.count({ where: { tcgplayerProductId: null } }),
@@ -27,6 +27,8 @@ export default async function AdminPage() {
     prisma.card.count(),
     prisma.card.count({ where: { tcgplayerProductId: null, scryfallId: null, pokemontcgId: null } }),
     prisma.evSnapshot.findFirst({ orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    prisma.set.count({ where: { tcgplayerGroupId: null } }),
+    prisma.pullTier.count({ where: { lastSyncedAt: { not: null } } }),
   ]);
 
   return (
@@ -41,6 +43,8 @@ export default async function AdminPage() {
           <p>{products} products</p>
           <p>{noPrice} without a price</p>
           <p>{noTcgId} without a TCGplayer id (sealed prices can&apos;t auto-refresh)</p>
+          <p>{setsNoGroup} sets not linked to TCGplayer</p>
+          <p>{syncedTiers} tiers syncing their card pool from TCGplayer</p>
           <p>{cards} cards tracked</p>
           <p>{cardsNoId} cards without an external id</p>
           <p>Tiers: {tiers.map((t) => `${t._count} ${t.oddsSource.toLowerCase()}`).join(" · ")}</p>
@@ -52,8 +56,8 @@ export default async function AdminPage() {
         <CardHeader>
           <CardTitle>Price refresh</CardTitle>
           <CardDescription>
-            Runs the same job as the daily cron: TCGCSV (TCGplayer mirror) for sealed + singles, Scryfall for Magic singles, pokemontcg.io
-            for Pokémon singles. Items without external ids are skipped.
+            Runs the same job as the daily cron. It first links sets, products and cards to TCGplayer ids automatically (by name), syncs tier
+            card pools, then prices everything from TCGCSV, the free daily TCGplayer mirror. Scryfall and pokemontcg.io fill any gaps.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -15,7 +15,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { PriceChart, type ChartPoint } from "@/components/price-chart";
 import { TrackingForm } from "@/components/tracking-form";
 import { WatchOwnButtons } from "@/components/watch-own-buttons";
-import { CardPriceForm, ProductPriceForm, TierForm } from "@/components/admin-forms";
+import { CardPriceForm, ProductPriceForm, TcgplayerIdsForm, TierForm } from "@/components/admin-forms";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +86,13 @@ export default async function ProductPage({ params, searchParams }: Props) {
             {PRODUCT_TYPE_LABEL[product.productType]} · {product.set.name}
           </span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">{product.name}</h1>
+        <div className="flex items-start gap-3">
+          {product.imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={product.imageUrl} alt="" className="size-16 shrink-0 rounded-md bg-muted object-contain" />
+          )}
+          <h1 className="text-2xl font-bold tracking-tight">{product.name}</h1>
+        </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <RatingBadge rating={s.rating[mode]} />
           <ConfidenceBadge level={s.confidence.level} />
@@ -187,6 +193,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
                       )}
                     </div>
                     {t.oddsSourceNote && <p className="text-xs text-muted-foreground">{t.oddsSourceNote}</p>}
+                    {dbTier.lastSyncedAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Card pool synced from TCGplayer ({dbTier.syncRarities.join(", ") || dbTier.syncNameContains}): {dbTier.cards.length} cards, {ago(dbTier.lastSyncedAt)}.
+                      </p>
+                    )}
                     <p className="font-mono text-xs">
                       avg = (Σ {t.pricedCount} priced cards + {t.poolSize - t.pricedCount} × {money(dbTier.unlistedCardValue)} assumed) / {t.poolSize} ={" "}
                       {money(t.avgCardValue)}
@@ -301,9 +312,27 @@ export default async function ProductPage({ params, searchParams }: Props) {
               .map((src) => `${allTiers.filter((t) => t.oddsSource === src).length} ${src.toLowerCase()}`)
               .join(" · ")}
           </p>
+          {product.tcgplayerProductId && (
+            <p>
+              <a
+                href={`https://www.tcgplayer.com/product/${product.tcgplayerProductId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 underline"
+              >
+                View on TCGplayer <ExternalLink className="size-3" />
+              </a>
+            </p>
+          )}
           {user?.isAdmin && (
-            <div className="border-t pt-3">
+            <div className="space-y-4 border-t pt-3">
               <ProductPriceForm productId={product.id} price={product.marketPrice} />
+              <TcgplayerIdsForm
+                productId={product.id}
+                setId={product.setId}
+                tcgplayerProductId={product.tcgplayerProductId}
+                tcgplayerGroupId={product.set.tcgplayerGroupId}
+              />
             </div>
           )}
         </CardContent>

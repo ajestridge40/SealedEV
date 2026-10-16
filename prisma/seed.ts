@@ -49,11 +49,19 @@ async function seedSet(s: SeedSet) {
         unlistedCardValue: t.unlistedCardValue,
         isChase: t.isChase ?? false,
         sortOrder: i,
+        syncRarities: t.syncRarities ?? [],
+        syncSubType: t.syncSubType ?? null,
+        syncNameContains: t.syncNameContains ?? null,
+        syncIncludeVariants: t.syncIncludeVariants ?? false,
       };
+      const where = { packTypeId_name: { packTypeId: packType.id, name: t.name } };
+      const prev = await prisma.pullTier.findUnique({ where, select: { lastSyncedAt: true } });
+      // Once a tier has synced from TCGplayer, its pool size comes from there.
+      const { poolSize, ...rest } = data;
       const tier = await prisma.pullTier.upsert({
-        where: { packTypeId_name: { packTypeId: packType.id, name: t.name } },
+        where,
         create: { packTypeId: packType.id, name: t.name, ...data },
-        update: data,
+        update: prev?.lastSyncedAt ? rest : { ...rest, poolSize },
       });
 
       for (const c of t.cards ?? []) {

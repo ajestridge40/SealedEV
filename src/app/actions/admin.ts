@@ -47,6 +47,13 @@ export async function updateTier(_: FormState, form: FormData): Promise<FormStat
         oddsSource: source,
         oddsSourceNote: String(form.get("oddsSourceNote") ?? "").trim() || null,
         oddsSourceUrl: url,
+        syncRarities: String(form.get("syncRarities") ?? "")
+          .split(";")
+          .map((r) => r.trim())
+          .filter(Boolean),
+        syncSubType: String(form.get("syncSubType") ?? "").trim() || null,
+        syncNameContains: String(form.get("syncNameContains") ?? "").trim() || null,
+        syncIncludeVariants: form.get("syncIncludeVariants") === "on",
       },
     });
   } catch (e) {
@@ -90,4 +97,26 @@ export async function createProduct(_: FormState, form: FormData): Promise<FormS
   } catch (e) {
     return { error: (e as Error).message };
   }
+}
+
+/** Manually set (or clear) TCGplayer ids when auto-linking can't decide. */
+export async function updateTcgplayerIds(_: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = (k: string) => {
+    const v = String(form.get(k) ?? "").trim();
+    if (!v) return null;
+    const n = Number(v);
+    if (!Number.isInteger(n) || n <= 0) throw new Error(`${k} must be a positive whole number`);
+    return n;
+  };
+  try {
+    await prisma.$transaction([
+      prisma.product.update({ where: { id: String(form.get("productId")) }, data: { tcgplayerProductId: id("tcgplayerProductId") } }),
+      prisma.set.update({ where: { id: String(form.get("setId")) }, data: { tcgplayerGroupId: id("tcgplayerGroupId") } }),
+    ]);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  revalidatePath("/", "layout");
+  return { ok: "Saved. Prices update on the next refresh." };
 }

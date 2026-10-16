@@ -17,7 +17,7 @@ Built mobile-first with Next.js (App Router) · TypeScript · Tailwind v4 · sha
 | **EV engine** (`src/lib/ev`) | Pure, unit-tested functions: tier averaging, raw/net (liquidation) EV, ROI, ratings, break-even (Poisson), confidence score, freshness. |
 | **Users** | Email/password auth (Auth.js credentials + bcrypt). Watchlist, My Collection (quantity, cost basis, P/L), price and ROI alerts (in-app), personal net-EV assumptions, CSV export. |
 | **Admin** (`/admin`) | Data-health overview, manual price refresh, add product, CSV bulk import (products / pull tiers / cards), inline edits of product prices, card prices and tiers on product pages. |
-| **Prices** | Provider interface with TCGCSV (daily TCGplayer mirror, sealed + singles), Scryfall (Magic singles) and pokemontcg.io (Pokémon singles). Daily price snapshots, daily EV snapshots, Vercel Cron. |
+| **Prices** | Once a day, prices for every sealed product and card come from [TCGCSV](https://tcgcsv.com), a free mirror of TCGplayer's catalogue and prices. **TCGplayer IDs are found automatically**: sets, products and cards are matched by name, and synced tiers pull in every card of their rarity. Scryfall and pokemontcg.io fill gaps. Daily price and EV snapshots run on Vercel Cron. |
 | **UX** | Bottom tab bar on phones, no-JS filter form (state lives in the URL, so it's shareable), dark mode. |
 
 ## Quick start
@@ -70,7 +70,7 @@ Register with an email listed in `ADMIN_EMAILS` to get the admin tools. To creat
 2. Import the repo in Vercel and set the env vars above.
 3. The `vercel-build` script runs `prisma generate && prisma migrate deploy && next build`.
 4. Seed once from your machine: `DATABASE_URL=... DIRECT_URL=... npm run db:seed`.
-5. `vercel.json` schedules `/api/cron/refresh-prices` daily at 09:00 UTC. Set `CRON_SECRET` and Vercel sends it as a bearer token.
+5. `vercel.json` schedules `/api/cron/refresh-prices` daily at 21:30 UTC, shortly after TCGCSV publishes (~20:00 UTC). Set `CRON_SECRET` and Vercel sends it as a bearer token. Run it once by hand from Admin → "Refresh prices now" after seeding.
 
 ## How EV is calculated
 
@@ -101,19 +101,29 @@ Every tier carries `oddsSource`:
 
 The Pokémon Company, Ravensburger and Bandai don't publish per-rarity odds, so those sets will always rely on community data. Wizards of the Coast publishes collation in its "Collecting \<Set\>" articles. Once you've checked an MTG tier against that article, switch it to `PUBLISHED` and add the link.
 
-## Data sources & limitations
+## Daily prices (TCGCSV + automatic TCGplayer IDs)
 
-| Source | Covers | Needs on our side |
-| --- | --- | --- |
-| [TCGCSV](https://tcgcsv.com) (daily TCGplayer mirror) | Sealed products and singles, all games | `Game.tcgplayerCategoryId` (preset), `Set.tcgplayerGroupId`, `tcgplayerProductId` on the product or card |
-| [Scryfall](https://scryfall.com/docs/api) | Magic singles | Set code (seeded). Uses the collector number, or the name for non-variant cards, or `scryfallId` |
-| [pokemontcg.io](https://pokemontcg.io) | Pokémon singles | `Card.pokemontcgId`, e.g. `sv8-238` |
-| Manual / CSV | Anything | — |
+[TCGCSV](https://tcgcsv.com) republishes TCGplayer's full catalogue and prices for every game once a day (~20:00 UTC). It's free and needs no API key. The daily job (`src/lib/pricing/refresh.ts`) runs in this order:
 
-- **The seed data has no TCGplayer ids yet**, so sealed prices won't auto-refresh until you add `tcgplayer_product_id` (CSV import or the admin form) and `tcgplayerGroupId` on the set. The refresh report and the admin data-health panel count what's missing.
-- The providers are written to each API's documented response format. They couldn't be run live from the build sandbox (outbound API access was blocked), so check the first refresh report for errors.
-- eBay sold listings and Cardmarket aren't wired up. eBay's Marketplace Insights API is restricted and Cardmarket's API needs approval. To add one, implement `ProductPriceProvider`/`CardPriceProvider` in `src/lib/pricing/providers/` and register it in `registry.ts`.
-- EV assumes independent packs and equally likely cards within a tier. Real collation (for example, guaranteed hits per box) shifts the variance much more than the mean.
+1. **Auto-link** (`src/lib/pricing/tcgcsv/link.ts`). Fills in missing TCGplayer IDs:
+   - **sets → groups** by name. "Scarlet & Violet—Surging Sparks" matches "SV08: Surging Sparks", and "Bloomburrow" doesn't match "Bloomburrow Commander".
+   - **sealed products** by name within that group. "Display" is treated as "Box". Cases and Pokémon Center exclusives don't match a plain box or ETB. The product image is saved too.
+   - **hand-listed cards** by collector number, or by name + rarity. The regular printing wins over "(Borderless)"-style variants.
+   - **synced tiers**: a tier with `syncRarities` (or `syncNameContains`) gets *every* card of that rarity in the set, priced from the chosen sub-type (e.g. `Reverse Holofoil`). Its `poolSize` follows TCGplayer, so EV uses real prices for the whole pool instead of "unlisted card" assumptions.
+2. **Prices** for every linked product and card, saved as daily snapshots.
+3. **EV snapshots** for the price-vs-EV chart, then **alerts**.
+
+Matching is deliberately strict. Anything ambiguous is skipped and listed under Admin → Refresh → "items need a manual TCGplayer id or tier fix", with candidate names and IDs. You can then:
+- set the product or set ID on the product page (admin section). The product ID is the number in `tcgplayer.com/product/<id>`.
+- fix a tier's sync rarities, or import them by CSV. When a tier finds no cards, the report lists the rarity names TCGplayer actually uses in that set.
+
+IDs you set by hand are never overwritten.
+
+**Verify on the first run.** The matching rules are unit-tested against TCGplayer-shaped fixtures, and the whole job was integration-tested with a fake TCGCSV. The build sandbox couldn't reach tcgcsv.com, though, so check the first real refresh report. Rarity and sub-type names in particular (e.g. Lorcana's foil sub-type) may need a tweak, which the report points out.
+
+Other sources: Scryfall (Magic) and pokemontcg.io (Pokémon) price any card TCGCSV didn't. eBay sold listings and Cardmarket aren't wired up: eBay's Marketplace Insights API is restricted, and Cardmarket's API needs approval. To add a source, implement `ProductPriceProvider`/`CardPriceProvider` in `src/lib/pricing/providers/` and register it in `registry.ts`.
+
+EV still assumes independent packs and equally likely cards within a tier. Real collation (e.g. guaranteed hits per box) affects the variance much more than the mean.
 
 ## Project structure
 
@@ -151,12 +161,12 @@ Pack types are shared between products. A booster box and an ETB of the same set
 
 **A new game.** Append it to `GAMES` in `src/lib/games.ts` (with its TCGplayer category id), then run `npm run db:seed`. Flesh and Blood is category 62 and Digimon is 63.
 
-**A new set or product.**
+**A new set or product.** For automatic prices, use the exact set and product names TCGplayer uses (or set the IDs by hand), and give each tier `syncRarities`.
 - *Admin UI:* use `/admin` → Add product, then add tiers via CSV.
 - *CSV:* import in order `tiers` → `cards` → `products`. Examples are built into the import panel:
   ```csv
-  game,set,pack_type,tier,per_pack,pool_size,unlisted_value,odds_source,odds_note,odds_url,is_chase
-  pokemon,Scarlet & Violet—Surging Sparks,Booster Pack,Special Illustration Rare,1/87,13,15,COMMUNITY,Card Codex,https://cardcodex.com/,yes
+  game,set,pack_type,tier,per_pack,pool_size,unlisted_value,odds_source,odds_note,odds_url,is_chase,sync_rarities,sync_subtype
+  pokemon,Scarlet & Violet—Surging Sparks,Booster Pack,Special Illustration Rare,1/87,13,15,COMMUNITY,Card Codex,https://cardcodex.com/,yes,Special Illustration Rare,
   ```
 - *Seed file:* add a `SeedSet` to `prisma/seed-data/` (see `types.ts`) and include it in `prisma/seed.ts`. This is best for sets you want in every environment.
 
@@ -164,7 +174,7 @@ Pack types are shared between products. A booster box and an ETB of the same set
 
 ## Roadmap / next iterations
 
-- Fill in TCGplayer ids for the seed products so sealed prices refresh automatically.
+- Check the first live refresh report and fix any unmatched IDs or tier rarity names.
 - Email or push delivery for alerts (`lib/alerts.ts` already builds the messages).
 - Magic-link sign-in (Auth.js Email provider).
 - More sets and games (One Piece, Yu-Gi-Oh! and Lorcana are already registered as games).

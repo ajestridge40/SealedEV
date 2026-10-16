@@ -28,6 +28,7 @@ export interface CardPriceTarget {
   tcgplayerProductId: number | null;
   tcgplayerCategoryId: number | null;
   tcgplayerGroupId: number | null;
+  tcgplayerSubType: string | null;
   scryfallId: string | null;
   pokemontcgId: string | null;
 }

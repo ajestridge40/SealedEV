@@ -34,6 +34,29 @@ export function RefreshButton() {
             Products updated {report.products.updated}/{report.products.total} ({report.products.noExternalId} without TCGplayer id) · Cards
             updated {report.cards.updated}/{report.cards.total} · EV snapshots {report.evSnapshots} · Alerts fired {report.alertsFired}
           </p>
+          {report.link && (
+            <p>
+              TCGplayer linking: {report.link.setsLinked} sets, {report.link.productsLinked} products, {report.link.cardsLinked} cards linked ·{" "}
+              {report.link.tiersSynced} tiers synced (+{report.link.tierCardsLinked} cards, −{report.link.tierCardsUnlinked})
+              {report.link.errors.length > 0 && <span className="text-bad"> · errors: {report.link.errors.join("; ")}</span>}
+            </p>
+          )}
+          {report.link && report.link.unmatched.length > 0 && (
+            <details className="rounded-md border p-2 text-xs">
+              <summary className="cursor-pointer font-medium">{report.link.unmatched.length} items need a manual TCGplayer id or tier fix</summary>
+              <ul className="mt-2 space-y-1.5">
+                {report.link.unmatched.map((u, i) => (
+                  <li key={i}>
+                    <span className="font-medium">
+                      [{u.kind}] {u.name}
+                    </span>
+                    : {u.reason}
+                    {u.candidates.length > 0 && <span className="text-muted-foreground"> — candidates: {u.candidates.join(" · ")}</span>}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           <ul className="text-xs text-muted-foreground">
             {report.providers.map((p, i) => (
               <li key={i}>

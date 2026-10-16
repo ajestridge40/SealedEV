@@ -10,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 const EXAMPLES = {
   products: `game,set,name,product_type,msrp,market_price,release_date,pack_type,packs,cards_per_pack,tcgplayer_product_id
 pokemon,Scarlet & Violet—Surging Sparks,Surging Sparks Booster Bundle,Booster Bundle,26.94,32.50,2024-11-08,Booster Pack,6,10,`,
-  tiers: `game,set,pack_type,tier,per_pack,pool_size,unlisted_value,odds_source,odds_note,odds_url,is_chase
-pokemon,Scarlet & Violet—Surging Sparks,Booster Pack,Special Illustration Rare,1/87,13,15,COMMUNITY,Card Codex,https://cardcodex.com/,yes`,
+  tiers: `game,set,pack_type,tier,per_pack,pool_size,unlisted_value,odds_source,odds_note,odds_url,is_chase,sync_rarities,sync_subtype
+pokemon,Scarlet & Violet—Surging Sparks,Booster Pack,Special Illustration Rare,1/87,13,15,COMMUNITY,Card Codex,https://cardcodex.com/,yes,Special Illustration Rare,`,
   cards: `game,set,pack_type,tier,name,number,rarity,finish,variant,price,tcgplayer_product_id,scryfall_id,pokemontcg_id
 pokemon,Scarlet & Violet—Surging Sparks,Booster Pack,Special Illustration Rare,Pikachu ex,238,Special Illustration Rare,NONFOIL,,240,,,sv8-238`,
 };

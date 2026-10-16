@@ -9,8 +9,9 @@ import { cardKey } from "./card-key";
 /**
  * CSV import. Two formats (header row required, column order free):
  *
- * products:  game,set,name,product_type,msrp,market_price,release_date,pack_type,packs,cards_per_pack,tcgplayer_product_id
- * tiers:     game,set,pack_type,tier,per_pack,pool_size,unlisted_value,odds_source,odds_note,odds_url,is_chase
+ * products:  game,set,name,product_type,msrp,market_price,release_date,pack_type,packs,cards_per_pack,tcgplayer_product_id,tcgplayer_group_id
+ * tiers:     game,set,pack_type,tier,per_pack,pool_size,unlisted_value,odds_source,odds_note,odds_url,is_chase,
+ *            sync_rarities (; separated),sync_subtype,sync_name_contains,sync_include_variants
  * cards:     game,set,pack_type,tier,name,number,rarity,finish,variant,price,tcgplayer_product_id,scryfall_id,pokemontcg_id
  *
  * Sets and pack types are created on the fly. per_pack accepts "1/87",
@@ -26,6 +27,7 @@ export interface ImportResult {
 
 export type Row = Record<string, string>;
 
+const truthy = (v: string | undefined) => ["1", "true", "yes", "y"].includes((v ?? "").trim().toLowerCase());
 const num = (v: string | undefined) => (v == null || v.trim() === "" ? null : Number(v.replace(/[$,]/g, "")));
 
 export function parsePerPack(v: string): number {
@@ -85,6 +87,8 @@ export async function importProduct(row: Row): Promise<"created" | "updated"> {
       update: { count: packs },
     });
   }
+  const groupId = num(row.tcgplayer_group_id);
+  if (groupId) await prisma.set.update({ where: { id: set.id }, data: { tcgplayerGroupId: groupId } });
   const price = num(row.market_price);
   if (price != null) await recordProductPrice(product.id, price, "CSV_IMPORT");
   return existing ? "updated" : "created";
@@ -104,7 +108,18 @@ async function importTier(row: Row): Promise<"created" | "updated"> {
     oddsSource: source,
     oddsSourceNote: row.odds_note?.trim() || null,
     oddsSourceUrl: row.odds_url?.trim() || null,
-    isChase: ["1", "true", "yes", "y"].includes((row.is_chase ?? "").trim().toLowerCase()),
+    isChase: truthy(row.is_chase),
+    ...(row.sync_rarities !== undefined || row.sync_name_contains !== undefined
+      ? {
+          syncRarities: (row.sync_rarities ?? "")
+            .split(";")
+            .map((r) => r.trim())
+            .filter(Boolean),
+          syncSubType: row.sync_subtype?.trim() || null,
+          syncNameContains: row.sync_name_contains?.trim() || null,
+          syncIncludeVariants: truthy(row.sync_include_variants),
+        }
+      : {}),
   };
   const key = { packTypeId_name: { packTypeId: packType.id, name: row.tier.trim() } };
   const existing = await prisma.pullTier.findUnique({ where: key });

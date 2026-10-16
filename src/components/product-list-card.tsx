@@ -33,6 +33,10 @@ export function ProductListCard({
       <Link href={href} className="block p-4 hover:bg-accent/40">
         <div className="flex items-start gap-3">
           {rank != null && <span className="mt-0.5 w-6 shrink-0 text-sm font-semibold text-muted-foreground tabular-nums">#{rank}</span>}
+          {p.imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.imageUrl} alt="" loading="lazy" className="size-14 shrink-0 rounded-md bg-muted object-contain" />
+          )}
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-1.5">
               <GameChip slug={p.game.slug} name={p.game.shortName} />

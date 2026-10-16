@@ -31,6 +31,11 @@ export interface SeedTier {
   unlistedCardValue: number;
   isChase?: boolean;
   cards?: SeedCard[];
+  /** TCGplayer sync (see PullTier in schema.prisma). Leave unset to keep the tier manual. */
+  syncRarities?: string[];
+  syncSubType?: string;
+  syncNameContains?: string;
+  syncIncludeVariants?: boolean;
 }
 
 export interface SeedPackType {
