@@ -1,0 +1,279 @@
+// SealedEV data model.
+//
+// How EV inputs hang together:
+//   Game ─< Set ─< PackType ─< PullTier >─< Card
+//                     │
+//   Product ─< ProductPack (n × PackType)   + ProductExtra (promos etc.)
+//
+// A product's EV = Σ packs × (Σ tiers perPack × avg tier value) + extras.
+// See src/lib/ev/calculate.ts for the exact (pure, unit-tested) implementation.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ProductType {
+  BOOSTER_BOX
+  PLAY_BOOSTER_BOX
+  COLLECTOR_BOOSTER_BOX
+  ELITE_TRAINER_BOX
+  BOOSTER_BUNDLE
+  BUNDLE
+  SPECIAL_COLLECTION
+  BOOSTER_PACK
+  CASE
+  OTHER
+}
+
+/// Where a pull rate came from. Never mark something PUBLISHED unless the
+/// manufacturer actually published it (link it in oddsSourceUrl).
+enum OddsSource {
+  PUBLISHED // published by the manufacturer (e.g. a WotC "Collecting" article)
+  COMMUNITY // derived from public, large-sample community openings
+  ESTIMATE  // rough estimate / placeholder — lowest confidence
+}
+
+enum CardFinish {
+  NONFOIL
+  FOIL
+  OTHER
+}
+
+model Game {
+  id                  String    @id @default(cuid())
+  slug                String    @unique
+  name                String
+  shortName           String
+  /// TCGplayer category id — used by the TCGCSV price provider.
+  tcgplayerCategoryId Int?
+  sortOrder           Int       @default(0)
+  sets                Set[]
+  products            Product[]
+}
+
+model Set {
+  id               String     @id @default(cuid())
+  gameId           String
+  game             Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  name             String
+  /// Set code used by external sources (Scryfall set code, pokemontcg.io set id, …)
+  code             String?
+  releaseDate      DateTime?
+  /// TCGplayer group id — used by the TCGCSV price provider.
+  tcgplayerGroupId Int?
+  cards            Card[]
+  packTypes        PackType[]
+  products         Product[]
+
+  @@unique([gameId, name])
+}
+
+/// A kind of pack within a set (e.g. "Play Booster" vs "Collector Booster").
+model PackType {
+  id           String        @id @default(cuid())
+  setId        String
+  set          Set           @relation(fields: [setId], references: [id], onDelete: Cascade)
+  name         String
+  cardsPerPack Int
+  notes        String?
+  tiers        PullTier[]
+  productPacks ProductPack[]
+
+  @@unique([setId, name])
+}
+
+/// A group of cards that share a pull rate inside a pack type
+/// (e.g. "Special Illustration Rare", "Mythic (rare slot)").
+model PullTier {
+  id                String      @id @default(cuid())
+  packTypeId        String
+  packType          PackType    @relation(fields: [packTypeId], references: [id], onDelete: Cascade)
+  name              String
+  rarity            String?
+  /// Expected number of cards from this tier per pack (1 in 87 packs => 1/87).
+  perPack           Float
+  oddsSource        OddsSource
+  oddsSourceNote    String?
+  oddsSourceUrl     String?
+  /// Total distinct cards in this tier. Cards not linked below are valued at unlistedCardValue.
+  poolSize          Int
+  unlistedCardValue Float       @default(0)
+  /// Chase tiers feed the break-even analysis.
+  isChase           Boolean     @default(false)
+  sortOrder         Int         @default(0)
+  cards             TierCard[]
+  updatedAt         DateTime    @updatedAt
+
+  @@unique([packTypeId, name])
+}
+
+/// A specific printing (finish/variant matter for price).
+model Card {
+  id                 String     @id @default(cuid())
+  setId              String
+  set                Set        @relation(fields: [setId], references: [id], onDelete: Cascade)
+  /// Stable per-set identity: number|name, finish and variant.
+  key                String
+  name               String
+  number             String?
+  rarity             String?
+  finish             CardFinish @default(NONFOIL)
+  variant            String?
+  marketPrice        Float?
+  priceSource        String?
+  priceUpdatedAt     DateTime?
+  tcgplayerProductId Int?
+  scryfallId         String?
+  pokemontcgId       String?
+  tiers              TierCard[]
+
+  @@unique([setId, key])
+}
+
+model TierCard {
+  tierId String
+  tier   PullTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  cardId String
+  card   Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@id([tierId, cardId])
+}
+
+model Product {
+  id                 String          @id @default(cuid())
+  slug               String          @unique
+  name               String
+  gameId             String
+  game               Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  setId              String
+  set                Set             @relation(fields: [setId], references: [id], onDelete: Cascade)
+  productType        ProductType
+  msrp               Float?
+  /// Latest known market price (denormalised from PriceSnapshot for fast listing).
+  marketPrice        Float?
+  priceSource        String?
+  priceUpdatedAt     DateTime?
+  releaseDate        DateTime?
+  imageUrl           String?
+  notes              String?
+  tcgplayerProductId Int?
+  packs              ProductPack[]
+  extras             ProductExtra[]
+  priceSnapshots     PriceSnapshot[]
+  evSnapshots        EvSnapshot[]
+  userProducts       UserProduct[]
+  notifications      Notification[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([gameId])
+}
+
+model ProductPack {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  packTypeId String
+  packType   PackType @relation(fields: [packTypeId], references: [id], onDelete: Cascade)
+  count      Int
+
+  @@unique([productId, packTypeId])
+}
+
+/// Guaranteed non-pack contents (e.g. an ETB promo card).
+model ProductExtra {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  value     Float
+  /// Apply selling fees/costs in "net" mode (true for sellable cards).
+  liquidate Boolean @default(true)
+  note      String?
+}
+
+/// One price per product, source and day (daily snapshots).
+model PriceSnapshot {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price      Float
+  source     String
+  day        DateTime @db.Date
+  capturedAt DateTime @default(now())
+
+  @@unique([productId, source, day])
+  @@index([productId, day])
+}
+
+/// Daily record of computed EV so price vs EV can be charted over time.
+model EvSnapshot {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  day       DateTime @db.Date
+  price     Float?
+  evRaw     Float
+  evNet     Float
+  createdAt DateTime @default(now())
+
+  @@unique([productId, day])
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  passwordHash  String
+  /// Personal liquidation assumptions (null => app defaults).
+  feePct        Float?
+  perCardCost   Float?
+  sellThreshold Float?
+  bulkValue     Float?
+  createdAt     DateTime       @default(now())
+  userProducts  UserProduct[]
+  notifications Notification[]
+}
+
+model UserProduct {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  watching      Boolean   @default(false)
+  ownedQty      Int       @default(0)
+  /// Per-unit purchase price for owned copies.
+  costBasis     Float?
+  /// Alert when market price <= this.
+  alertMaxPrice Float?
+  /// Alert when ROI (%) >= this, e.g. 0 => alert once price falls to EV.
+  alertMinRoi   Float?
+  /// Use net (after-fees) EV for the ROI alert.
+  alertUseNet   Boolean   @default(false)
+  lastAlertAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([userId, productId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+}
