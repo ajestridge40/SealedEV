@@ -38,7 +38,7 @@ npm run db:seed
 npm run dev                   # http://localhost:3000
 ```
 
-Register with an email listed in `ADMIN_EMAILS` to get the admin tools. To create a user during seeding, set `SEED_USER_EMAIL` and `SEED_USER_PASSWORD` before `npm run db:seed`.
+For admin tools, list your email in `ADMIN_EMAILS` and create the login with `ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='…12+ chars…' npm run user:create-admin`. Admin emails can't be registered through the public form.
 
 ### Environment variables
 
@@ -63,14 +63,22 @@ Register with an email listed in `ADMIN_EMAILS` to get the admin tools. To creat
 | `npm run db:migrate` | Create a new migration after editing `schema.prisma` |
 | `npm run db:seed` | Upsert games from `src/lib/games.ts` and seed sets/products (idempotent; won't overwrite refreshed prices) |
 | `npm run prices:refresh` | Run the price refresh job from the CLI and print a report |
+| `npm run user:create-admin` | Create/reset an admin login (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
+| `npm run db:deploy` | Apply migrations (production) |
 
-## Deploying (Vercel + Neon)
+## Deploying
 
-1. Create a Neon (or Supabase) database. Copy the **pooled** URL to `DATABASE_URL` and the **direct** URL to `DIRECT_URL`.
-2. Import the repo in Vercel and set the env vars above.
-3. The `vercel-build` script runs `prisma generate && prisma migrate deploy && next build`.
-4. Seed once from your machine: `DATABASE_URL=... DIRECT_URL=... npm run db:seed`.
-5. `vercel.json` schedules `/api/cron/refresh-prices` daily at 21:30 UTC, shortly after TCGCSV publishes (~20:00 UTC). Set `CRON_SECRET` and Vercel sends it as a bearer token. Run it once by hand from Admin → "Refresh prices now" after seeding.
+**AWS (recommended):** step-by-step guide in [`docs/DEPLOY_AWS.md`](docs/DEPLOY_AWS.md). It covers Amplify Hosting for the app, RDS PostgreSQL, CodeBuild for jobs and EventBridge Scheduler for the daily refresh. Repo files involved:
+
+| File | Purpose |
+| --- | --- |
+| `amplify.yml` | Amplify build: install, pass env vars to the server, `prisma migrate deploy`, build |
+| `buildspec.jobs.yml` | CodeBuild jobs runner: `prices:refresh` (daily), `db:seed`, `db:deploy`, `user:create-admin` |
+| `Dockerfile` | Standalone container image (ECS Express Mode / Lightsail), health check on `/api/health` |
+
+**Vercel + Neon** also works: set the env vars, and `vercel-build` migrates on deploy. `vercel.json` schedules the cron at 21:30 UTC with `CRON_SECRET`.
+
+**Admin accounts** are created with `ADMIN_EMAIL=… ADMIN_PASSWORD=… npm run user:create-admin`, and the email must also be in `ADMIN_EMAILS`. The public sign-up form refuses admin emails, because emails aren't verified.
 
 ## How EV is calculated
 
@@ -175,7 +183,8 @@ Pack types are shared between products. A booster box and an ETB of the same set
 ## Roadmap / next iterations
 
 - Check the first live refresh report and fix any unmatched IDs or tier rarity names.
-- Email or push delivery for alerts (`lib/alerts.ts` already builds the messages).
+- Email or push delivery for alerts (`lib/alerts.ts` already builds the messages; Amazon SES is the natural fit on AWS).
+- Email verification and password reset (also SES).
 - Magic-link sign-in (Auth.js Email provider).
 - More sets and games (One Piece, Yu-Gi-Oh! and Lorcana are already registered as games).
 - Variance view: a Monte-Carlo distribution of box outcomes using per-card odds.

@@ -1,0 +1,21 @@
+# AWS CodeBuild "jobs runner". One project, many jobs — pick with JOB_SCRIPT:
+#   prices:refresh       daily price refresh (default; scheduled by EventBridge Scheduler)
+#   db:deploy            apply database migrations
+#   db:seed              load the seed products (safe to re-run)
+#   user:create-admin    create/reset the admin login (needs ADMIN_EMAIL + ADMIN_PASSWORD)
+# Env vars (DATABASE_URL, DIRECT_URL, ADMIN_EMAILS, …) come from the CodeBuild
+# project — store secrets in Secrets Manager / Parameter Store and reference them there.
+version: 0.2
+env:
+  variables:
+    JOB_SCRIPT: "prices:refresh"
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm ci
+  build:
+    commands:
+      - echo "Running npm run $JOB_SCRIPT"
+      - npm run "$JOB_SCRIPT"

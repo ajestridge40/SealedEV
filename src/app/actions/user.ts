@@ -7,7 +7,7 @@ import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/auth";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { isAdminEmail, requireUser } from "@/lib/session";
 
 export type FormState = { error?: string; ok?: string } | undefined;
 
@@ -25,6 +25,9 @@ export async function register(_: FormState, form: FormData): Promise<FormState>
   const parsed = authSchema.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const email = parsed.data.email.toLowerCase();
+  // Emails aren't verified, so admin accounts can't be claimed through the public
+  // form — create them with `npm run user:create-admin`.
+  if (isAdminEmail(email)) return { error: "This email is reserved. Admin accounts are created by the site owner." };
   if (await prisma.user.findUnique({ where: { email } })) return { error: "An account with that email already exists" };
   await prisma.user.create({ data: { email, passwordHash: await bcrypt.hash(parsed.data.password, 10) } });
   await signIn("credentials", { email, password: parsed.data.password, redirectTo: safeNext(form.get("next")) });
