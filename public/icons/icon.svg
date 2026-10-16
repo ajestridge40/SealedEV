@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#030712"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- back card -->
+  <rect x="150" y="96" width="196" height="276" rx="22" fill="#374151" transform="rotate(-12 248 234)"/>
+  <!-- front card -->
+  <rect x="168" y="112" width="196" height="276" rx="22" fill="url(#card)" transform="rotate(6 266 250)"/>
+  <text x="266" y="292" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="800" font-size="118" fill="#ffffff" transform="rotate(6 266 250)" letter-spacing="-4">EV</text>
+  <!-- trend arrow -->
+  <path d="M120 420 L210 360 L262 392 L380 312" fill="none" stroke="#fbbf24" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M340 304 L392 304 L392 356" fill="none" stroke="#fbbf24" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -18,7 +18,7 @@ Built mobile-first with Next.js (App Router) · TypeScript · Tailwind v4 · sha
 | **Users** | Email/password auth (Auth.js credentials + bcrypt). Watchlist, My Collection (quantity, cost basis, P/L), price and ROI alerts (in-app), personal net-EV assumptions, CSV export. |
 | **Admin** (`/admin`) | Data-health overview, manual price refresh, add product, CSV bulk import (products / pull tiers / cards), inline edits of product prices, card prices and tiers on product pages. |
 | **Prices** | Once a day, prices for every sealed product and card come from [TCGCSV](https://tcgcsv.com), a free mirror of TCGplayer's catalogue and prices. **TCGplayer IDs are found automatically**: sets, products and cards are matched by name, and synced tiers pull in every card of their rarity. Scryfall and pokemontcg.io fill gaps. Daily price and EV snapshots run on Vercel Cron. |
-| **UX** | Bottom tab bar on phones, no-JS filter form (state lives in the URL, so it's shareable), dark mode. |
+| **UX** | Bottom tab bar on phones, no-JS filter form (state lives in the URL, so it's shareable), dark mode. Installable iPhone app (PWA, plus an optional Capacitor iOS shell). |
 
 ## Quick start
 
@@ -65,6 +65,10 @@ For admin tools, list your email in `ADMIN_EMAILS` and create the login with `AD
 | `npm run prices:refresh` | Run the price refresh job from the CLI and print a report |
 | `npm run user:create-admin` | Create/reset an admin login (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
 | `npm run db:deploy` | Apply migrations (production) |
+
+## iPhone app
+
+SealedEV installs on iPhone as a full-screen **Home Screen app**: open the deployed site in Safari → Share → **Add to Home Screen**. It has its own icon, works without Safari bars, shows an offline screen, and updates on every deploy. An optional **native iOS shell** (Capacitor, `ios/`) can be built with Xcode for TestFlight. Step-by-step instructions are in [`docs/IPHONE.md`](docs/IPHONE.md).
 
 ## Deploying
 

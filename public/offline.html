@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Offline · SealedEV</title>
+    <style>
+      :root { color-scheme: light dark; font-family: -apple-system, system-ui, sans-serif; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 24px; background: #fafafa; color: #111; }
+      @media (prefers-color-scheme: dark) { body { background: #0a0a0a; color: #fafafa; } }
+      img { width: 72px; height: 72px; border-radius: 16px; }
+      button { margin-top: 16px; font: inherit; padding: 10px 18px; border-radius: 8px; border: 1px solid #8884; background: transparent; color: inherit; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" />
+      <h1>You're offline</h1>
+      <p>SealedEV needs a connection for live prices and EVs.</p>
+      <button onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

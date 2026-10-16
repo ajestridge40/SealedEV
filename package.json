@@ -17,7 +17,9 @@
     "prices:refresh": "tsx scripts/refresh-prices.ts",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
-    "user:create-admin": "tsx scripts/create-admin.ts"
+    "user:create-admin": "tsx scripts/create-admin.ts",
+    "ios:sync": "cap sync ios",
+    "ios:open": "cap open ios"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -39,6 +41,9 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "@eslint/eslintrc": "^3.3.7",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^22.20.5",

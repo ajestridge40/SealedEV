@@ -13,10 +13,11 @@ export async function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
           <Link href="/" className="mr-2 flex items-center gap-1.5 font-bold tracking-tight">
-            <span className="grid size-7 place-items-center rounded-md bg-primary text-xs text-primary-foreground">EV</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/icon-192.png" alt="" className="size-7 rounded-md" />
             SealedEV
           </Link>
           <DesktopNav isAdmin={!!user?.isAdmin} />
